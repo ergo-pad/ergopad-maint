@@ -1,7 +1,7 @@
 import subprocess
 import shlex
 import boto3
-
+                    
 from os import getenv, listdir, remove
 from pydantic import BaseModel
 from typing import Optional
@@ -22,6 +22,11 @@ now = datetime.now()
  - annually
 """
 
+import argparse
+parser = argparse.ArgumentParser(description='Process maintenance interval')
+parser.add_argument('-i', '--interval', choices=['daily', 'weekly', 'monthly', 'annually'], default='daily')
+args = parser.parse_args()
+
 #region LOGGING
 import logging
 level = (logging.WARN, logging.DEBUG)[DEBUG]
@@ -30,6 +35,13 @@ logging.basicConfig(format='{asctime}:{name:>8s}:{levelname:<8s}::{message}', st
 import inspect
 myself = lambda: inspect.stack()[1][3]
 #endregion LOGGING
+
+s3 = boto3.resource(
+    's3',
+    aws_access_key_id = getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key = getenv("AWS_SECRET_ACCESS_KEY"),
+    config = Config(signature_version='s3v4')
+)
 
 class SqlDatabase(BaseModel):
     name: str
@@ -49,13 +61,6 @@ for db in getenv('POSTGRES_ALPHA_DATABASES').split(','):
 def upload(src, key, removeSourceFile:bool = False):
     try:
         logging.debug(f'uploading {src} to {key}')
-        s3 = boto3.resource(
-            's3',
-            aws_access_key_id = getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key = getenv("AWS_SECRET_ACCESS_KEY"),
-            config = Config(signature_version='s3v4')
-        )
-        # res = s3.Object(S3_BUCKET, dst).put(Body=open(key, 'rb'))
         res = s3.Bucket(S3_BUCKET).upload_file(src, key)
         
         if removeSourceFile:
@@ -107,7 +112,13 @@ def cleanup(folder: str):
                             try: 
                                 remove(f'/{BACKUP_DIR}/{i}/{f}')
                                 j.append(f'/{BACKUP_DIR}/{i}/{f}')
-                            except: pass
+                                
+                                # try to remove from s3
+                                logging.debug(f'uploading {src} to {key}')
+                                res = s3.Bucket(S3_BUCKET).delete_file(f'{i}/{f}')
+                            except Exception as e: 
+                                logging.error(e)
+                                pass
                         else: logging.debug(f'skipping {f}')
                 except:
                     pass
@@ -122,7 +133,7 @@ def cleanup(folder: str):
 if __name__ == '__main__':
     # backup sql servers
     for sql in SQL:
-        res = backup(sql, 'daily')
+        res = backup(sql, args.interval)
         logging.info(res)
 
     # save daily for 2 weeks, weekly for 2 months, monthly for 2 years, annually    

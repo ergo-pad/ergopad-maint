@@ -11,7 +11,7 @@ services:
     volumes:
       - /backups:/backups
       - ./app:/app
-      # - ./periodic/daily:/etc/periodic/daily/:ro
+      - ./periodic:/etc/periodic:ro
     logging:
         driver: "json-file"
         options:
