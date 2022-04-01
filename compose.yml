@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  pgmaint:
+    container_name: pgmaint
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: ${ENV_FILE}
+    working_dir: /app
+    volumes:
+      - /backups:/backups
+      - ./app:/app
+      # - ./periodic/daily:/etc/periodic/daily/:ro
+    logging:
+        driver: "json-file"
+        options:
+            max-file: 5
+            max-size: 10m
+    command: tail /dev/null -f

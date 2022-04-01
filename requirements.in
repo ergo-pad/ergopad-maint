@@ -1,0 +1,3 @@
+# pip-compile --output-file=app/requirements.txt requirements.in
+pydantic
+boto3
