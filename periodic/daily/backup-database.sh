@@ -1,1 +1,2 @@
-python3 /app/tasks-sql.py --interval=daily
+#!/bin/bash
+/usr/bin/python3 /app/tasks_sql.py --interval=daily

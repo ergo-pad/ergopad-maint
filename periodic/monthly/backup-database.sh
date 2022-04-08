@@ -1,1 +1,2 @@
-python3 /app/tasks-sql.py --interval=monthly
+#!/bin/bash
+/usr/bin/python3 /app/tasks_sql.py --interval=monthly

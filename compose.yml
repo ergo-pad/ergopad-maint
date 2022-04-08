@@ -17,4 +17,5 @@ services:
         options:
             max-file: 5
             max-size: 10m
-    command: tail /dev/null -f
+    command: crond -f
+    # command: tail /dev/null -f

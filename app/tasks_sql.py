@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from botocore.client import Config
 
 ### INIT
-BACKUP_DIR = 'backups'
+BACKUP_DIR = 'backups/ergopad'
 S3_BUCKET = 'ergopad-backup'
 DEBUG = True
 
